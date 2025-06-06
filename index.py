@@ -6,7 +6,7 @@ from binance.client import Client
 api_key = '7YrTTOWV9VZXLQJiVtPa5ZuadMAhfZfJBb8s6zaNkYxnQGl2FFlujswoqbhbgUjY'
 api_secret = 'yjla2ZLQK5aJNbTrAPh6UDiFOQktdYnGPtKTTiedStfpMgkMA6pE2QkvAVMLubUk'
 
-client = Client(api_key, api_secret)
+client = Client(api_key, api_secret, tld='us')
 
 symbol = 'BTCUSDT'
 diferencia_compra = 5000  # diferencia de 5 mil USD para comprar
