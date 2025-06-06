@@ -7,7 +7,7 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python index.py
     envVars:
-      - key: 7YrTTOWV9VZXLQJiVtPa5ZuadMAhfZfJBb8s6zaNkYxnQGl2FFlujswoqbhbgUjY
+      - key: BINANCE_API_KEY
         value: "7YrTTOWV9VZXLQJiVtPa5ZuadMAhfZfJBb8s6zaNkYxnQGl2FFlujswoqbhbgUjY"
       - key: BINANCE_API_SECRET
         value: "yjla2ZLQK5aJNbTrAPh6UDiFOQktdYnGPtKTTiedStfpMgkMA6pE2QkvAVMLubUk"
