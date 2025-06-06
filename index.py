@@ -1,10 +1,12 @@
-from binance.client import Client
+from flask import Flask
+import threading
 import time
+from binance.client import Client
 
 api_key = '7YrTTOWV9VZXLQJiVtPa5ZuadMAhfZfJBb8s6zaNkYxnQGl2FFlujswoqbhbgUjY'
 api_secret = 'yjla2ZLQK5aJNbTrAPh6UDiFOQktdYnGPtKTTiedStfpMgkMA6pE2QkvAVMLubUk'
 
-client = Client(api_key, api_secret, tld='us')
+client = Client(api_key, api_secret)
 
 symbol = 'BTCUSDT'
 diferencia_compra = 5000  # diferencia de 5 mil USD para comprar
@@ -51,44 +53,59 @@ def sell(cantidad_btc, precio_actual):
     except Exception as e:
         print(f"[ERROR] No se pudo realizar la venta: {e}")
 
-contador = 0
-while True:
-    contador += 1
-    print(f"\n🕒 Iteración número: {contador}")
+def trading_bot():
+    global precio_maximo
+    contador = 0
+    while True:
+        contador += 1
+        print(f"\n🕒 Iteración número: {contador}")
 
-    precio_actual = get_price()
-    if precio_actual is None:
+        precio_actual = get_price()
+        if precio_actual is None:
+            time.sleep(30)
+            continue
+
+        # Actualizar el precio máximo si el precio actual lo supera
+        if precio_actual > precio_maximo:
+            precio_maximo = precio_actual
+            print(f"🔝 Nuevo precio máximo: {precio_maximo} USDT")
+
+        usdt_disponible = get_usdt_balance()
+        btc_disponible = get_btc_balance()
+        capital_total_usdt = usdt_disponible + (btc_disponible * precio_actual)
+
+        print(f"💰 Capital total: {capital_total_usdt:.2f} USDT (USDT: {usdt_disponible}, BTC: {btc_disponible})")
+        print(f"📈 Precio actual: {precio_actual} USDT")
+
+        # Compra si el precio actual está 5 mil USD por debajo del máximo
+        if precio_actual <= (precio_maximo - diferencia_compra):
+            usdt_a_invertir = capital_total_usdt * porcentaje_compra
+            if usdt_a_invertir > usdt_disponible:
+                usdt_a_invertir = usdt_disponible  # No gastar más de lo que tenés
+            buy(usdt_a_invertir, precio_actual)
+
+        # Venta si el precio vuelve al máximo anterior
+        posiciones_para_vender = []
+        for pos in posiciones:
+            if precio_actual >= pos['precio_objetivo_venta']:
+                sell(pos['btc'], precio_actual)
+                posiciones_para_vender.append(pos)
+
+        # Eliminar posiciones vendidas
+        for pos in posiciones_para_vender:
+            posiciones.remove(pos)
+
         time.sleep(30)
-        continue
 
-    # Actualizar el precio máximo si el precio actual lo supera
-    if precio_actual > precio_maximo:
-        precio_maximo = precio_actual
-        print(f"🔝 Nuevo precio máximo: {precio_maximo} USDT")
+# === Flask ===
 
-    usdt_disponible = get_usdt_balance()
-    btc_disponible = get_btc_balance()
-    capital_total_usdt = usdt_disponible + (btc_disponible * precio_actual)
+app = Flask(__name__)
 
-    print(f"💰 Capital total: {capital_total_usdt:.2f} USDT (USDT: {usdt_disponible}, BTC: {btc_disponible})")
-    print(f"📈 Precio actual: {precio_actual} USDT")
+@app.route('/')
+def home():
+    return "🚀 Bot corriendo con Flask."
 
-    # Compra si el precio actual está 5 mil USD por debajo del máximo
-    if precio_actual <= (precio_maximo - diferencia_compra):
-        usdt_a_invertir = capital_total_usdt * porcentaje_compra
-        if usdt_a_invertir > usdt_disponible:
-            usdt_a_invertir = usdt_disponible  # No gastar más de lo que tenés
-        buy(usdt_a_invertir, precio_actual)
-
-    # Venta si el precio vuelve al máximo anterior
-    posiciones_para_vender = []
-    for pos in posiciones:
-        if precio_actual >= pos['precio_objetivo_venta']:
-            sell(pos['btc'], precio_actual)
-            posiciones_para_vender.append(pos)
-
-    # Eliminar posiciones vendidas
-    for pos in posiciones_para_vender:
-        posiciones.remove(pos)
-
-    time.sleep(30)
+if __name__ == '__main__':
+    bot_thread = threading.Thread(target=trading_bot)
+    bot_thread.start()
+    app.run(host='0.0.0.0', port=5000)
