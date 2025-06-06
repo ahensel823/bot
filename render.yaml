@@ -1,12 +1,13 @@
 services:
-  - type: worker
+  - type: background_worker
     name: binance-bot
     region: oregon
     runtime: python
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python index.py
     envVars:
-      - key: BINANCE_API_KEY
-        value: "tu_api_key"
+      - key: 7YrTTOWV9VZXLQJiVtPa5ZuadMAhfZfJBb8s6zaNkYxnQGl2FFlujswoqbhbgUjY
+        value: "7YrTTOWV9VZXLQJiVtPa5ZuadMAhfZfJBb8s6zaNkYxnQGl2FFlujswoqbhbgUjY"
       - key: BINANCE_API_SECRET
-        value: "tu_api_secret"
+        value: "yjla2ZLQK5aJNbTrAPh6UDiFOQktdYnGPtKTTiedStfpMgkMA6pE2QkvAVMLubUk"
